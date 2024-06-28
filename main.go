@@ -149,6 +149,11 @@ func main() {
 		if r.URL.Path == "/_version" {
 			w.Header().Add("X-Tiny-SSL-Version", Version)
 		}
+		if r.Host == "loadb.flakery.xyz" {
+			// print 🌨️
+			fmt.Fprintf(w, "🌨️\n")
+			return
+		}
 		r.Header.Set("X-Forwarded-Proto", "https")
 		// print request url
 		c, err := ttlCache.Get()
@@ -178,10 +183,6 @@ func main() {
 
 		h.ServeHTTP(w, r)
 	})
-
-	if useLogging {
-		handler = &LoggingMiddleware{handler}
-	}
 
 	server := &http.Server{Addr: listen, Handler: handler}
 
