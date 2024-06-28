@@ -61,7 +61,7 @@
                   after = [ "network.target" ];
                   wantedBy = [ "multi-user.target" ];
                   serviceConfig = {
-                    ExecStart = "${app}/bin/app";
+                    ExecStart = "${app}/bin/tiny-ssl-reverse-proxy";
                     Restart = "always";
                     KillMode = "process";
                   };

@@ -2,3 +2,4 @@
 /tiny-ssl-reverse-proxy
 /*.pem
 .direnv
+result
