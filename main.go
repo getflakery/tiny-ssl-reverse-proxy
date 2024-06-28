@@ -172,12 +172,12 @@ func main() {
 
 		fmt.Println("Host: ", r.Host)
 
-		service, ok  := config.Http.Routers[r.Host].Service
+		router, ok := config.Http.Routers[r.Host]
 		if !ok {
 			http.Error(w, "Service not found", http.StatusNotFound)
 			return
 		}
-		servers := config.Http.Services[service].Servers
+		servers := config.Http.Services[router.Service].Servers
 		// pick random server
 		server := servers[0].URL
 		parsed, err := url.Parse(server)
