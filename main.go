@@ -170,7 +170,7 @@ func main() {
 			return
 		}
 
-		fmt.Println(r.Host)
+		fmt.Println("Host: ", r.Host)
 
 		service, ok  := config.Http.Routers[r.Host].Service
 		if !ok {
