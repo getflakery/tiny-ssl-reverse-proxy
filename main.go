@@ -102,7 +102,8 @@ func main() {
 			w.Header().Add("X-Tiny-SSL-Version", Version)
 		}
 		r.Header.Set("X-Forwarded-Proto", "https")
-		fmt.Println(r.RemoteAddr, r.Method, r.URL)
+		// print request url
+		log.Printf("Request URL: %v", r.URL)
 		originalHandler.ServeHTTP(w, r)
 	})
 
