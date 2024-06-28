@@ -96,6 +96,12 @@ func main() {
 
 	handler = httpProxy
 
+	otherUlr := "http://10.0.4.125:8080"
+	otherProxy := httputil.NewSingleHostReverseProxy(url)
+	otherProxy.Transport = &ConnectionErrorHandler{http.DefaultTransport}
+	otherProxy.FlushInterval = flushInterval
+
+
 	originalHandler := handler
 	handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/_version" {
@@ -104,7 +110,11 @@ func main() {
 		r.Header.Set("X-Forwarded-Proto", "https")
 		// print request url
 		log.Printf("Request URL: %v", r.Host)
-		originalHandler.ServeHTTP(w, r)
+		if r.Host == "grafana.01cef0.flakery.xyz" {
+			originalHandler.ServeHTTP(w, r)
+		} else {
+			otherProxy.ServeHTTP(w, r)
+		}
 	})
 
 	if useLogging {
