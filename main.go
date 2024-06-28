@@ -2,11 +2,13 @@ package main
 
 import (
 	"bytes"
+	"crypto/rand"
 	"encoding/json"
 	"flag"
 	"fmt"
 	"io/ioutil"
 	"log"
+	"math/big"
 	"net"
 	"net/http"
 	"net/http/httputil"
@@ -16,34 +18,6 @@ import (
 
 	"github.com/sensiblecodeio/tiny-ssl-reverse-proxy/proxyprotocol"
 )
-
-// interface routers {
-//     [key: string]: {
-//         service: string
-//     }
-// }
-
-// interface services {
-//     [key: string]: {
-//         servers: {
-//             url: string
-//         }[]
-//     }
-// }
-
-// // log body
-// return {
-//     "http": {
-//         "routers": {
-//             ...routers
-//         },
-//         "services": {
-//             ...services
-//         }
-//     }
-// }
-
-// create go structs for parsing the json
 
 type Routers struct {
 	Service string `json:"service"`
@@ -179,7 +153,22 @@ func main() {
 		}
 		servers := config.Http.Services[router.Service].Servers
 		// pick random server
-		server := servers[0].URL
+		num := len(servers)
+		if num == 0 {
+			http.Error(w, "No servers found", http.StatusServiceUnavailable)
+			return
+		}
+		rnum, err := rand.Int(
+			rand.Reader,
+			big.NewInt(int64(num)),
+		)
+		if err != nil {
+			log.Printf("Error: %v", err)
+			http.Error(w, "Error", http.StatusInternalServerError)
+			return
+		}
+		serverIndex := rnum.Int64()
+		server := servers[serverIndex].URL
 		parsed, err := url.Parse(server)
 		if err != nil {
 			log.Fatalln("Fatal parsing -where:", err)

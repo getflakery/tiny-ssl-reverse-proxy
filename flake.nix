@@ -7,9 +7,11 @@
   inputs.gomod2nix.inputs.nixpkgs.follows = "nixpkgs";
   inputs.gomod2nix.inputs.flake-utils.follows = "flake-utils";
   inputs.flakery.url = "github:getflakery/flakes";
+  inputs.comin.url = "github:r33drichards/comin/8f8352537ca4ecdcad06b1b4ede4465d37dbd00c";
 
 
-  outputs = inputs@{ self, nixpkgs, flake-utils, gomod2nix, flakery }:
+
+  outputs = inputs@{ self, nixpkgs, flake-utils, gomod2nix, flakery, comin, ... }:
     (flake-utils.lib.eachDefaultSystem
       (system:
         let
@@ -32,7 +34,11 @@
 
           packages.nixosConfigurations.flakery = nixpkgs.lib.nixosSystem {
             system = system;
+            specialArgs = {
+              inherit inputs;
+            };
             modules = [
+              inputs.comin.nixosModules.comin
               flakery.nixosModules.flakery
               {
                 security.acme = {
@@ -65,6 +71,19 @@
                     Restart = "always";
                     KillMode = "process";
                   };
+                };
+
+                services.comin = {
+                  enable = true;
+                  hostname = "flakery";
+                  remotes = [
+                    {
+                      name = "origin";
+                      url = "https://github.com/getflakery/tiny-ssl-reverse-proxy";
+                      poller.period = 2;
+                      branches.main.name = "master";
+                    }
+                  ];
                 };
               }
             ];
