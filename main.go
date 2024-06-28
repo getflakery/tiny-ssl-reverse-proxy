@@ -153,7 +153,7 @@ func main() {
 			// print 🌨️
 			fmt.Fprintf(w, "🌨️\n")
 			return
-		}``
+		}
 		r.Header.Set("X-Forwarded-Proto", "https")
 		// print request url
 		c, err := ttlCache.Get()
