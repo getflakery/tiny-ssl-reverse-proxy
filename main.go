@@ -114,8 +114,10 @@ func main() {
 		// print request url
 		log.Printf("Request URL: %v", r.Host)
 		if r.Host == "grafana.01cef0.flakery.xyz" {
+			log.Printf("servering grafana")
 			originalHandler.ServeHTTP(w, r)
 		} else {
+			log.Printf("servering other")
 			otherProxy.ServeHTTP(w, r)
 		}
 	})
