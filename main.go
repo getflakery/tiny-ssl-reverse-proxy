@@ -97,10 +97,13 @@ func main() {
 	handler = httpProxy
 
 	otherUlr := "http://10.0.4.125:8080"
-	otherProxy := httputil.NewSingleHostReverseProxy(url)
+	parsed, err := url.Parse(otherUlr)
+	if err != nil {
+		log.Fatalln("Fatal parsing -where:", err)
+	}
+	otherProxy := httputil.NewSingleHostReverseProxy(parsed)
 	otherProxy.Transport = &ConnectionErrorHandler{http.DefaultTransport}
 	otherProxy.FlushInterval = flushInterval
-
 
 	originalHandler := handler
 	handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
