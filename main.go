@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -15,6 +16,64 @@ import (
 
 	"github.com/sensiblecodeio/tiny-ssl-reverse-proxy/proxyprotocol"
 )
+
+// interface routers {
+//     [key: string]: {
+//         service: string
+//     }
+// }
+
+// interface services {
+//     [key: string]: {
+//         servers: {
+//             url: string
+//         }[]
+//     }
+// }
+
+// // log body
+// return {
+//     "http": {
+//         "routers": {
+//             ...routers
+//         },
+//         "services": {
+//             ...services
+//         }
+//     }
+// }
+
+// create go structs for parsing the json
+
+type Routers struct {
+	Service string `json:"service"`
+}
+
+type Servers struct {
+	URL string `json:"url"`
+}
+
+type Services struct {
+	Servers []Servers `json:"servers"`
+}
+
+type Http struct {
+	Routers  map[string]Routers  `json:"routers"`
+	Services map[string]Services `json:"services"`
+}
+
+type Config struct {
+	Http Http `json:"http"`
+}
+
+func parseConfig(config []byte) (Config, error) {
+	var c Config
+	err := json.Unmarshal(config, &c)
+	if err != nil {
+		return Config{}, err
+	}
+	return c, nil
+}
 
 // Version number
 const Version = "0.23.0"
@@ -83,31 +142,8 @@ func main() {
 	}
 	flag.Parse()
 
-	url, err := url.Parse(where)
-	if err != nil {
-		log.Fatalln("Fatal parsing -where:", err)
-	}
-
-	httpProxy := httputil.NewSingleHostReverseProxy(url)
-	httpProxy.Transport = &ConnectionErrorHandler{http.DefaultTransport}
-	httpProxy.FlushInterval = flushInterval
-
-	var handler http.Handler
-
-	handler = httpProxy
-
-	otherUlr := "http://10.0.4.125:8080"
-	parsed, err := url.Parse(otherUlr)
-	if err != nil {
-		log.Fatalln("Fatal parsing -where:", err)
-	}
-	otherProxy := httputil.NewSingleHostReverseProxy(parsed)
-	otherProxy.Transport = &ConnectionErrorHandler{http.DefaultTransport}
-	otherProxy.FlushInterval = flushInterval
-
-	originalHandler := handler
 	ttlCache := NewTTLCache(5 * time.Second)
-	handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/_version" {
 			w.Header().Add("X-Tiny-SSL-Version", Version)
 		}
@@ -119,15 +155,26 @@ func main() {
 			http.Error(w, "Error", http.StatusInternalServerError)
 			return
 		}
-		fmt.Fprintf(w, "Cache: %s\n", c)
-		log.Printf("Request URL: %v", r.Host)
-		if r.Host == "grafana.01cef0.flakery.xyz" {
-			log.Printf("servering grafana")
-			originalHandler.ServeHTTP(w, r)
-		} else {
-			log.Printf("servering other")
-			otherProxy.ServeHTTP(w, r)
+		// fmt.Fprintf(w, "Cache: %s\n", c)
+		config, err := parseConfig(c)
+		if err != nil {
+			log.Printf("Error: %v", err)
+			http.Error(w, "Error", http.StatusInternalServerError)
+			return
 		}
+		service := config.Http.Routers[r.Host].Service
+		servers := config.Http.Services[service].Servers
+		// pick random server
+		server := servers[0].URL
+		parsed, err := url.Parse(server)
+		if err != nil {
+			log.Fatalln("Fatal parsing -where:", err)
+		}
+		h := httputil.NewSingleHostReverseProxy(parsed)
+		h.Transport = &ConnectionErrorHandler{http.DefaultTransport}
+		h.FlushInterval = flushInterval
+
+		h.ServeHTTP(w, r)
 	})
 
 	if useLogging {
