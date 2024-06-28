@@ -103,7 +103,7 @@ func main() {
 		}
 		r.Header.Set("X-Forwarded-Proto", "https")
 		// print request url
-		log.Printf("Request URL: %v", r.URL)
+		log.Printf("Request URL: %v", r.Host)
 		originalHandler.ServeHTTP(w, r)
 	})
 
