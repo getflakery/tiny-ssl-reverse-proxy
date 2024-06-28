@@ -106,12 +106,20 @@ func main() {
 	otherProxy.FlushInterval = flushInterval
 
 	originalHandler := handler
+	ttlCache := NewTTLCache(5 * time.Second)
 	handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/_version" {
 			w.Header().Add("X-Tiny-SSL-Version", Version)
 		}
 		r.Header.Set("X-Forwarded-Proto", "https")
 		// print request url
+		c, err := ttlCache.Get()
+		if err != nil {
+			log.Printf("Error: %v", err)
+			http.Error(w, "Error", http.StatusInternalServerError)
+			return
+		}
+		fmt.Fprintf(w, "Cache: %s\n", c)
 		log.Printf("Request URL: %v", r.Host)
 		if r.Host == "grafana.01cef0.flakery.xyz" {
 			log.Printf("servering grafana")
