@@ -7,7 +7,7 @@ app:
     defaults.email = "rwendt1337@gmail.com";
     certs = {
       "flakery.xyz" = {
-        domain = domain;
+        domain = "*.flakery.xyz";
         # Use DNS challenge for wildcard certificates
         dnsProvider = "route53"; # Update this to your DNS provider if different
         environmentFile = "/var/lib/acme/route53-credentials";
