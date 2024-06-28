@@ -153,7 +153,7 @@ func main() {
 			// print 🌨️
 			fmt.Fprintf(w, "🌨️\n")
 			return
-		}
+		}``
 		r.Header.Set("X-Forwarded-Proto", "https")
 		// print request url
 		c, err := ttlCache.Get()
@@ -169,7 +169,14 @@ func main() {
 			http.Error(w, "Error", http.StatusInternalServerError)
 			return
 		}
-		service := config.Http.Routers[r.Host].Service
+
+		fmt.Println(r.Host)
+
+		service, ok  := config.Http.Routers[r.Host].Service
+		if !ok {
+			http.Error(w, "Service not found", http.StatusNotFound)
+			return
+		}
 		servers := config.Http.Services[service].Servers
 		// pick random server
 		server := servers[0].URL
