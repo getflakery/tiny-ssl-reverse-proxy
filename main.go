@@ -69,8 +69,8 @@ func main() {
 	flag.StringVar(&listen, "listen", ":443", "Bind address to listen on")
 	// certFile = "/var/lib/acme/flakery.xyz/cert.pem";
 	// keyFile = "";
-	flag.StringVar(&key, "key", "/var/lib/acme/flakery.xyz/cert.pem", "Path to PEM key")
-	flag.StringVar(&cert, "cert", "/var/lib/acme/flakery.xyz/key.pem", "Path to PEM certificate")
+	flag.StringVar(&key, "key", "/var/lib/acme/flakery.xyz/key.pem", "Path to PEM key")
+	flag.StringVar(&cert, "cert", "/var/lib/acme/flakery.xyz/cert.pem", "Path to PEM certificate")
 	flag.StringVar(&where, "where", "http://10.0.4.20:3000", "Place to forward connections to")
 	flag.BoolVar(&useTLS, "tls", true, "accept HTTPS connections")
 	flag.BoolVar(&useLogging, "logging", true, "log requests")
