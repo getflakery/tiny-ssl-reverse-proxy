@@ -142,8 +142,10 @@ func main() {
 	}
 	flag.Parse()
 
+	var handler http.Handler
+
 	ttlCache := NewTTLCache(5 * time.Second)
-	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/_version" {
 			w.Header().Add("X-Tiny-SSL-Version", Version)
 		}
@@ -182,6 +184,8 @@ func main() {
 	}
 
 	server := &http.Server{Addr: listen, Handler: handler}
+
+	var err error
 
 	switch {
 	case useTLS && behindTCPProxy:
