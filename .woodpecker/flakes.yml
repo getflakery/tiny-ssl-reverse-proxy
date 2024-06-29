@@ -13,6 +13,6 @@ steps:
       - echo $SSH_PRIVATE_KEY_B64 | base64 -d > ~/.ssh/id_ed25519
       - chmod 400 ~/.ssh/id_ed25519
       - ssh-keyscan 35.164.151.132 >> ~/.ssh/known_hosts
-      - nix build .#${flake} -L --print-out-paths  | xargs -I{} nix copy --to ssh://flakery@35.164.151.132 {}
+      - nix build .#${flake} -L --print-out-paths  | xargs -I{} nix copy --substitute-on-destination  --to ssh://flakery@35.164.151.132 {}
     secrets:
       - ssh_private_key_b64
