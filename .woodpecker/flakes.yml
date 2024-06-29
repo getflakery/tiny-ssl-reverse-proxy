@@ -17,3 +17,5 @@ steps:
       - nix build .#${flake} -L --print-out-paths  | xargs -I{} nix copy --to https://binary-cache-6b1b4a.flakery.xyz {}
     secrets:
       - TAILSCALE_AUTHKEY
+    volumes:
+      - /dev/net/tun:/dev/net/tun
