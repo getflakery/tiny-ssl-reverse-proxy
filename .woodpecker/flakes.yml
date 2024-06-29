@@ -6,16 +6,13 @@ steps:
   - name: build
     image: nixos/nix
     commands:
-      # install tailscale 
-      - nix-env -iA nixpkgs.tailscale
-      # start tailscald
-      - tailscaled --state="mem:" &
-      - tailscale up --authkey=${TAILSCALE_AUTHKEY} --hostname="wp" --accept-routes
       - echo 'experimental-features = flakes nix-command' >> /etc/nix/nix.conf
       - echo "extra-substituters = https://binary-cache-6b1b4a.flakery.xyz" >> /etc/nix/nix.conf
       - echo "extra-trusted-public-keys = binary-cache-6b1b4a.flakery.xyz/:Du7IeCqQQiJpvdhizPnX2ZN2GTlMeUR7C+r9x8Xkjz0=" >> /etc/nix/nix.conf
-      - nix build .#${flake} -L --print-out-paths  | xargs -I{} nix copy --to https://binary-cache-6b1b4a.flakery.xyz {}
+      - mkdir -p ~/.ssh
+      - echo $SSH_PRIVATE_KEY_B64 | base64 -d > ~/.ssh/id_ed25519
+      - chmod 400 ~/.ssh/id_ed25519
+      - ssh-keyscan 35.164.151.132 >> ~/.ssh/known_hosts
+      - nix build .#${flake} -L --print-out-paths  | xargs -I{} nix copy --to flakery@35.164.151.132 {}
     secrets:
-      - TAILSCALE_AUTHKEY
-    volumes:
-      - /dev/net/tun:/dev/net/tun
+      - ssh_private_key_b64
