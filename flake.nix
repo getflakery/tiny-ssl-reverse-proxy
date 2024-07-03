@@ -7,7 +7,7 @@
   inputs.gomod2nix.inputs.nixpkgs.follows = "nixpkgs";
   inputs.gomod2nix.inputs.flake-utils.follows = "flake-utils";
   inputs.flakery.url = "github:getflakery/flakes";
-  inputs.comin.url = "github:r33drichards/comin/8f8352537ca4ecdcad06b1b4ede4465d37dbd00c";
+  inputs.comin.url = "github:r33drichards/comin/cca7a52e63b2d4fc81ec75df902e4f1c25a3048e";
 
 
 
@@ -54,7 +54,7 @@
                   };
                 };
 
-                networking.firewall.allowedTCPPorts = [ 80 443 ];
+                networking.firewall.allowedTCPPorts = [ 80 443 9002];
 
                 services.tailscale = {
                   enable = true;
@@ -72,6 +72,20 @@
                     KillMode = "process";
                   };
                 };
+
+                services.prometheus = {
+                  enable = true;
+                  port = 9090;
+                  exporters = {
+                    node = {
+                      enable = true;
+                      enabledCollectors = [ "systemd" ];
+                      port = 9002;
+                    };
+
+                  };
+                };
+
 
                 services.comin = {
                   enable = true;
