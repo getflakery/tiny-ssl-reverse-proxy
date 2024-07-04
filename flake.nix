@@ -54,7 +54,7 @@
                   };
                 };
 
-                networking.firewall.allowedTCPPorts = [ 80 443 9002];
+                networking.firewall.allowedTCPPorts = [ 80 443 9002 ];
 
                 services.tailscale = {
                   enable = true;
@@ -72,46 +72,46 @@
                     KillMode = "process";
                   };
                 };
-              services.promtail = {
-                enable = true;
-                configuration = {
-                  server = {
-                    http_listen_port = 9080;
-                    grpc_listen_port = 0;
-                  };
-                  clients = [{ url = "http://grafana:3100/loki/api/v1/push"; }];
-                  scrape_configs = [
-                    {
-                      job_name = "system";
-                      static_configs = [
-                        {
-                          targets = [ "localhost" ];
+                services.promtail = {
+                  enable = true;
+                  configuration = {
+                    server = {
+                      http_listen_port = 9080;
+                      grpc_listen_port = 0;
+                    };
+                    clients = [{ url = "http://grafana:3100/loki/api/v1/push"; }];
+                    scrape_configs = [
+                      {
+                        job_name = "system";
+                        static_configs = [
+                          {
+                            targets = [ "localhost" ];
+                            labels = {
+                              job = "varlogs";
+                              __path__ = "/var/log/*log";
+                            };
+                          }
+
+                        ];
+                      }
+                      {
+                        job_name = "journal";
+                        journal = {
+                          max_age = "12h";
                           labels = {
-                            job = "varlogs";
-                            __path__ = "/var/log/*log";
+                            job = "systemd-journal";
+                            host = "load-balancer";
                           };
-                        }
-
-                      ];
-                    }
-                    {
-                      job_name = "journal";
-                      journal = {
-                        max_age = "12h";
-                        labels = {
-                          job = "systemd-journal";
-                          host = "load-balancer";
                         };
-                      };
-                      relabel_configs = [{
-                        source_labels = [ "__journal__systemd_unit" ];
-                        target_label = "unit";
-                      }];
-                    }
+                        relabel_configs = [{
+                          source_labels = [ "__journal__systemd_unit" ];
+                          target_label = "unit";
+                        }];
+                      }
 
-                  ];
+                    ];
+                  };
                 };
-              };
                 services.prometheus = {
                   enable = true;
                   port = 9090;
