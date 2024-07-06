@@ -37,7 +37,7 @@ func (r *ResponseRecorder) WriteHeader(n int) {
 func (r *ResponseRecorder) Hijack() (net.Conn, *bufio.ReadWriter, error) {
 	hijacker, ok := r.ResponseWriter.(http.Hijacker)
 	if !ok {
-		return nil, nil, fmt.Errorf("Not a Hijacker: %T", r.ResponseWriter)
+		return nil, nil, fmt.Errorf("not a Hijacker: %T", r.ResponseWriter)
 	}
 	return hijacker.Hijack()
 }

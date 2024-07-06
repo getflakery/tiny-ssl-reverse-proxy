@@ -7,7 +7,7 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
-	"log"
+	"log/slog"
 	"math/big"
 	"net"
 	"net/http"
@@ -75,15 +75,18 @@ body {
 </body>
 </html>`
 
-type ConnectionErrorHandler struct{ http.RoundTripper }
+type ConnectionErrorHandler struct {
+	http.RoundTripper
+	slog.Logger
+}
 
 func (c *ConnectionErrorHandler) RoundTrip(req *http.Request) (*http.Response, error) {
 	resp, err := c.RoundTripper.RoundTrip(req)
 	if err != nil {
-		log.Printf("Error: backend request failed for %v: %v",
-			req.RemoteAddr, err)
+		c.Error("backend request failed", "err", err, "remoteAddr", req.RemoteAddr)
 	}
 	if _, ok := err.(*net.OpError); ok {
+		c.Error("backend connection failed", "err", err, "remoteAddr", req.RemoteAddr)
 		r := &http.Response{
 			StatusCode: http.StatusServiceUnavailable,
 			Body:       ioutil.NopCloser(bytes.NewBufferString(message)),
@@ -94,6 +97,9 @@ func (c *ConnectionErrorHandler) RoundTrip(req *http.Request) (*http.Response, e
 }
 
 func main() {
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+	logger.Info("starting", "version", Version)
+
 	var (
 		listen, cert, key, where           string
 		useTLS, useLogging, behindTCPProxy bool
@@ -126,28 +132,31 @@ func main() {
 		if r.Host == "loadb.flakery.xyz" {
 			// print 🌨️
 			fmt.Fprintf(w, "🌨️\n")
+			logger.Info("🌨️")
 			return
 		}
 		r.Header.Set("X-Forwarded-Proto", "https")
 		// print request url
 		c, err := ttlCache.Get()
 		if err != nil {
-			log.Printf("Error: %v", err)
+			logger.Error("error getting ttl cache", "err", err)
 			http.Error(w, "Error", http.StatusInternalServerError)
 			return
 		}
 		// fmt.Fprintf(w, "Cache: %s\n", c)
 		config, err := parseConfig(c)
 		if err != nil {
-			log.Printf("Error: %v", err)
+			logger.Error("error parsing config", "err", err)
 			http.Error(w, "Error", http.StatusInternalServerError)
 			return
 		}
 
 		fmt.Println("Host: ", r.Host)
+		logger.Info("request", "host", r.Host, "url", r.URL.String())
 
 		router, ok := config.Http.Routers[r.Host]
 		if !ok {
+			logger.Error("service not found", "service", r.Host)
 			http.Error(w, "Service not found", http.StatusNotFound)
 			return
 		}
@@ -155,6 +164,7 @@ func main() {
 		// pick random server
 		num := len(servers)
 		if num == 0 {
+			logger.Error("no servers found", "service", r.Host)
 			http.Error(w, "No servers found", http.StatusServiceUnavailable)
 			return
 		}
@@ -163,7 +173,7 @@ func main() {
 			big.NewInt(int64(num)),
 		)
 		if err != nil {
-			log.Printf("Error: %v", err)
+			logger.Error("error getting random number", "err", err)
 			http.Error(w, "Error", http.StatusInternalServerError)
 			return
 		}
@@ -171,10 +181,10 @@ func main() {
 		server := servers[serverIndex].URL
 		parsed, err := url.Parse(server)
 		if err != nil {
-			log.Fatalln("Fatal parsing -where:", err)
+			logger.Error("error parsing server", "err", err)
 		}
 		h := httputil.NewSingleHostReverseProxy(parsed)
-		h.Transport = &ConnectionErrorHandler{http.DefaultTransport}
+		h.Transport = &ConnectionErrorHandler{http.DefaultTransport, *logger}
 		h.FlushInterval = flushInterval
 
 		h.ServeHTTP(w, r)
@@ -195,5 +205,5 @@ func main() {
 		err = server.ListenAndServe()
 	}
 
-	log.Fatalln(err)
+	logger.Error("server error", "err", err)
 }
