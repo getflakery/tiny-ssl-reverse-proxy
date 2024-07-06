@@ -41,6 +41,9 @@
               inputs.comin.nixosModules.comin
               flakery.nixosModules.flakery
               {
+                # todo acme-flakery.xyz.service
+                # should follow rp.service
+                # and promtail.service
                 security.acme = {
                   acceptTerms = true;
                   defaults.email = "rwendt1337@gmail.com";
