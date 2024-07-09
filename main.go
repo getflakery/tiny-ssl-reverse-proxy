@@ -16,6 +16,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/samber/lo"
 	"github.com/sensiblecodeio/tiny-ssl-reverse-proxy/proxyprotocol"
 )
 
@@ -75,15 +76,20 @@ body {
 </body>
 </html>`
 
+var unhealthyHosts = map[Servers]bool{}
+
 type ConnectionErrorHandler struct {
 	http.RoundTripper
 	slog.Logger
+	server Servers
 }
 
 func (c *ConnectionErrorHandler) RoundTrip(req *http.Request) (*http.Response, error) {
 	resp, err := c.RoundTripper.RoundTrip(req)
 	if err != nil {
 		c.Error("backend request failed", "err", err, "remoteAddr", req.RemoteAddr, "url", req.URL.String(), "host", req.Host)
+		// mark server as unhealthy
+		unhealthyHosts[c.server] = true
 	}
 	if _, ok := err.(*net.OpError); ok {
 		c.Error("backend connection failed", "err", err, "remoteAddr", req.RemoteAddr, "url", req.URL.String(), "host", req.Host)
@@ -94,6 +100,13 @@ func (c *ConnectionErrorHandler) RoundTrip(req *http.Request) (*http.Response, e
 		return r, nil
 	}
 	return resp, err
+}
+
+func healthyServers(s []Servers, unhealthyHosts map[Servers]bool) []Servers {
+	return lo.Filter(s, func(s Servers, _ int) bool {
+		_, ok := unhealthyHosts[s]
+		return !ok
+	})
 }
 
 func main() {
@@ -150,7 +163,7 @@ func main() {
 			http.Error(w, "Error", http.StatusInternalServerError)
 			return
 		}
-x
+
 		fmt.Println("Host: ", r.Host)
 		logger.Info("request", "host", r.Host, "url", r.URL.String())
 
@@ -161,6 +174,8 @@ x
 			return
 		}
 		servers := config.Http.Services[router.Service].Servers
+		// filter unhealthy servers
+		servers = healthyServers(servers, unhealthyHosts)
 		// pick random server
 		num := len(servers)
 		if num == 0 {
@@ -178,13 +193,18 @@ x
 			return
 		}
 		serverIndex := rnum.Int64()
+		serv := servers[serverIndex]
 		server := servers[serverIndex].URL
 		parsed, err := url.Parse(server)
 		if err != nil {
 			logger.Error("error parsing server", "err", err)
 		}
 		h := httputil.NewSingleHostReverseProxy(parsed)
-		h.Transport = &ConnectionErrorHandler{http.DefaultTransport, *logger}
+		h.Transport = &ConnectionErrorHandler{
+			http.DefaultTransport,
+			*logger,
+			serv,
+		}
 		h.FlushInterval = flushInterval
 
 		h.ServeHTTP(w, r)
