@@ -88,6 +88,7 @@ func (c *ConnectionErrorHandler) RoundTrip(req *http.Request) (*http.Response, e
 	resp, err := c.RoundTripper.RoundTrip(req)
 	if err != nil {
 		c.Error("backend request failed", "err", err, "remoteAddr", req.RemoteAddr, "url", req.URL.String(), "host", req.Host)
+		c.Info("marking server as unhealthy", "server", c.server)
 		// mark server as unhealthy
 		unhealthyHosts[c.server] = true
 	}
