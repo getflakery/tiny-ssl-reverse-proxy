@@ -83,10 +83,10 @@ type ConnectionErrorHandler struct {
 func (c *ConnectionErrorHandler) RoundTrip(req *http.Request) (*http.Response, error) {
 	resp, err := c.RoundTripper.RoundTrip(req)
 	if err != nil {
-		c.Error("backend request failed", "err", err, "remoteAddr", req.RemoteAddr)
+		c.Error("backend request failed", "err", err, "remoteAddr", req.RemoteAddr, "url", req.URL.String(), "host", req.Host)
 	}
 	if _, ok := err.(*net.OpError); ok {
-		c.Error("backend connection failed", "err", err, "remoteAddr", req.RemoteAddr)
+		c.Error("backend connection failed", "err", err, "remoteAddr", req.RemoteAddr, "url", req.URL.String(), "host", req.Host)
 		r := &http.Response{
 			StatusCode: http.StatusServiceUnavailable,
 			Body:       ioutil.NopCloser(bytes.NewBufferString(message)),
@@ -150,7 +150,7 @@ func main() {
 			http.Error(w, "Error", http.StatusInternalServerError)
 			return
 		}
-
+x
 		fmt.Println("Host: ", r.Host)
 		logger.Info("request", "host", r.Host, "url", r.URL.String())
 
