@@ -176,7 +176,9 @@ func main() {
 		}
 		servers := config.Http.Services[router.Service].Servers
 		// filter unhealthy servers
-		servers = healthyServers(servers, unhealthyHosts)
+		if len(servers) > 1 { // temporary hack to avoid empty server list
+			servers = healthyServers(servers, unhealthyHosts)
+		}
 		// pick random server
 		num := len(servers)
 		if num == 0 {
