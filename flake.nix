@@ -63,10 +63,15 @@
                 };
 
                 systemd.services.rp = {
+                  environment = {
+                    "JWT_SECRET" = builtins.readFile /flakery-api-token;
+                    "FLAKERY_API_KEY" = builtins.readFile /jwt-secret;
+                  };
                   description = "reverse proxy";
                   after = [ "network.target" ];
                   wantedBy = [ "multi-user.target" ];
                   serviceConfig = {
+
                     ExecStart = "${app}/bin/tiny-ssl-reverse-proxy";
                     Restart = "always";
                     KillMode = "process";
