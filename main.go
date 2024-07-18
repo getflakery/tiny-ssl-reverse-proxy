@@ -149,6 +149,15 @@ func main() {
 			logger.Info("🌨️")
 			return
 		}
+		if r.Host == "woodpecker-ci-19fcc5.flakery.xyz" {
+			// check for host header X-Flakery-User-key
+			userKey := r.Header.Get("X-Flakery-User-key")
+			if userKey == "" {
+				http.Error(w, "Unauthorized", http.StatusUnauthorized)
+				return
+			}
+			logger.Info("user key", "key", userKey)
+		}
 		r.Header.Set("X-Forwarded-Proto", "https")
 		// print request url
 		c, err := ttlCache.Get()
