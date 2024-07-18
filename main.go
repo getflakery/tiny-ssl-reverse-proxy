@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log/slog"
 	"math/big"
@@ -16,6 +17,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/samber/lo"
 	"github.com/sensiblecodeio/tiny-ssl-reverse-proxy/proxyprotocol"
 )
@@ -110,6 +112,120 @@ func healthyServers(s []Servers, unhealthyHosts map[Servers]bool) []Servers {
 	})
 }
 
+type MyCustomClaims struct {
+	UserID string
+	jwt.RegisteredClaims
+}
+
+func getServersFromHost(
+	host string,
+	routers map[string]Routers,
+	services map[string]Services,
+	logger *slog.Logger,
+	r *http.Request,
+) ([]Servers, error) {
+
+	var service Services
+	if host == "wp.flakery.xyz" {
+		// check for host header X-Flakery-User-key
+		logger.Info("checking for user key")
+		userKey := r.Header.Get("X-Flakery-User-Key")
+		if userKey == "" {
+			// http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return nil, fmt.Errorf("unauthorized")
+		}
+		logger.Info("user key", "key", userKey)
+		// todo get user id from key
+		// read JWT_SECRET from env
+		secret := os.Getenv("JWT_SECRET")
+		if secret == "" {
+			return nil, fmt.Errorf("JWT_SECRET not set")
+		}
+
+		claims, err := parseJwt(userKey, secret)
+		if err != nil {
+			return nil, fmt.Errorf("error parsing jwt")
+		}
+		logger.Info("claims", "claims", claims)
+
+		userID := claims.(MyCustomClaims).UserID
+
+		logger.Info("user id", "id", userID)
+
+		// get flakery api key from env
+		apiKey := os.Getenv("FLAKERY_API_KEY")
+		if apiKey == "" {
+			return nil, fmt.Errorf("FLAKERY_API_KEY not set")
+		}
+
+		url := fmt.Sprintf("https://flakery.dev/api/v0/user/private-binary-cache/%s", userID)
+		req, err := http.NewRequest("GET", url, nil)
+		if err != nil {
+			return nil, fmt.Errorf("error creating request")
+		}
+		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", apiKey))
+		req.Header.Set("Content-Type", "application/json")
+
+		client := &http.Client{}
+		resp, err := client.Do(req)
+		if err != nil {
+			return nil, fmt.Errorf("error making request")
+		}
+		defer resp.Body.Close()
+
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return nil, fmt.Errorf("error reading body")
+		}
+
+		var cache PrivateBinaryCache
+		err = json.Unmarshal(body, &cache)
+		if err != nil {
+			return nil, fmt.Errorf("error unmarshalling body")
+		}
+
+		service = services[cache.DeploymentID]
+
+	} else {
+		router, ok := routers[host]
+		if !ok {
+			return nil, fmt.Errorf("router not found")
+		}
+		service, ok = services[router.Service]
+		if !ok {
+			return nil, fmt.Errorf("service not found")
+		}
+	}
+	return service.Servers, nil
+
+}
+
+func parseJwt(tokenString string, secret string) (interface{}, error) {
+
+	type MyCustomClaims struct {
+		UserID string
+		jwt.RegisteredClaims
+	}
+
+	token, err := jwt.ParseWithClaims(tokenString, &MyCustomClaims{}, func(token *jwt.Token) (interface{}, error) {
+		return []byte(secret), nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	if claims, ok := token.Claims.(*MyCustomClaims); ok && token.Valid {
+		return claims, nil
+	} else {
+		return nil, err
+	}
+
+}
+
+type PrivateBinaryCache struct {
+	DeploymentID string `json:"deployment_id"`
+}
+
 func main() {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 	logger.Info("starting", "version", Version)
@@ -149,20 +265,7 @@ func main() {
 			logger.Info("🌨️")
 			return
 		}
-		if r.Host == "wp.flakery.xyz" {
-			// check for host header X-Flakery-User-key
-			logger.Info("checking for user key")
-			userKey := r.Header.Get("X-Flakery-User-Key")
-			if userKey == "" {
-				http.Error(w, "Unauthorized", http.StatusUnauthorized)
-				return
-			}
-			logger.Info("user key", "key", userKey)
-			// todo get user id from key
-			// get binary cache host from user id from flakery xyz 
-			// forward request to binary cache host
-			// return response
-		}
+
 		r.Header.Set("X-Forwarded-Proto", "https")
 		// print request url
 		c, err := ttlCache.Get()
@@ -182,13 +285,15 @@ func main() {
 		fmt.Println("Host: ", r.Host)
 		logger.Info("request", "host", r.Host, "url", r.URL.String())
 
-		router, ok := config.Http.Routers[r.Host]
-		if !ok {
-			logger.Error("service not found", "service", r.Host)
-			http.Error(w, "Service not found", http.StatusNotFound)
+		// servers := config.Http.Services[router.Service].Servers
+		servers, err := getServersFromHost(r.Host, config.Http.Routers, config.Http.Services, logger, r)
+
+		if err != nil {
+			logger.Error("error getting servers", "err", err)
+			http.Error(w, "Error", http.StatusInternalServerError)
 			return
 		}
-		servers := config.Http.Services[router.Service].Servers
+
 		// filter unhealthy servers
 		if len(servers) > 1 { // temporary hack to avoid empty server list
 			servers = healthyServers(servers, unhealthyHosts)
