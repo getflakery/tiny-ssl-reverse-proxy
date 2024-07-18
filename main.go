@@ -151,7 +151,7 @@ func main() {
 		}
 		if r.Host == "woodpecker-ci-19fcc5.flakery.xyz" {
 			// check for host header X-Flakery-User-key
-			userKey := r.Header.Get("X-Flakery-User-key")
+			userKey := r.Header.Get("X-Flakery-User-Key")
 			if userKey == "" {
 				http.Error(w, "Unauthorized", http.StatusUnauthorized)
 				return
