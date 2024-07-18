@@ -149,7 +149,7 @@ func main() {
 			logger.Info("🌨️")
 			return
 		}
-		if r.Host == "woodpecker-ci-19fcc5.flakery.xyz" {
+		if r.Host == "wp.flakery.xyz" {
 			// check for host header X-Flakery-User-key
 			logger.Info("checking for user key")
 			userKey := r.Header.Get("X-Flakery-User-Key")
@@ -158,6 +158,10 @@ func main() {
 				return
 			}
 			logger.Info("user key", "key", userKey)
+			// todo get user id from key
+			// get binary cache host from user id from flakery xyz 
+			// forward request to binary cache host
+			// return response
 		}
 		r.Header.Set("X-Forwarded-Proto", "https")
 		// print request url
