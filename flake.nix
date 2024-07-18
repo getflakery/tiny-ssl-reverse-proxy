@@ -7,7 +7,7 @@
   inputs.gomod2nix.inputs.nixpkgs.follows = "nixpkgs";
   inputs.gomod2nix.inputs.flake-utils.follows = "flake-utils";
   inputs.flakery.url = "github:getflakery/flakes";
-  inputs.comin.url = "github:r33drichards/comin/cca7a52e63b2d4fc81ec75df902e4f1c25a3048e";
+  inputs.comin.url = "github:r33drichards/comin/c10b125b364bf13e3a11293a34a6e4d2fd0fcd4b";
 
 
 
