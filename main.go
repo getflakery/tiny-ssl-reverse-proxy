@@ -220,7 +220,7 @@ func parseJwt(tokenString string, secret string) (interface{}, error) {
 }
 
 type PrivateBinaryCache struct {
-	DeploymentID string `json:"deployment_id"`
+	DeploymentID string `json:"deploymentID"`
 }
 
 func main() {
