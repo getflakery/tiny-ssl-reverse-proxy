@@ -4,6 +4,9 @@ schema = 3
   [mod."github.com/golang-jwt/jwt/v5"]
     version = "v5.2.1"
     hash = "sha256-3AMtL0kAD5L2/3eHf/Q6+hqga8mEaeEs+Hcdlx65go4="
+  [mod."github.com/pkg/errors"]
+    version = "v0.9.1"
+    hash = "sha256-mNfQtcrQmu3sNg/7IwiieKWOgFQOVVe2yXgKBpe/wZw="
   [mod."github.com/samber/lo"]
     version = "v1.44.0"
     hash = "sha256-FGONIXxPuavWsDUmm/ZB9kxs2FWAeUr5WyTHQRiSYdM="
