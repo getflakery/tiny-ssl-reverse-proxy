@@ -64,8 +64,8 @@
 
                 systemd.services.rp = {
                   environment = {
-                    "JWT_SECRET" = builtins.readFile /flakery-api-token;
-                    "FLAKERY_API_KEY" = builtins.readFile /jwt-secret;
+                    "JWT_SECRET" = (pkgs.lib.removeSuffix "\n" (builtins.readFile  /jwt-secret));
+                    "FLAKERY_API_KEY" = (pkgs.lib.removeSuffix "\n" (builtins.readFile /flakery-api-token));
                   };
                   description = "reverse proxy";
                   after = [ "network.target" ];
