@@ -184,6 +184,7 @@ func getServersFromHost(
 		if err != nil {
 			return nil, fmt.Errorf("error unmarshalling body")
 		}
+		logger.Info("cache", "cache", cache)
 
 		service = services[cache.DeploymentID]
 
@@ -203,8 +204,6 @@ func getServersFromHost(
 
 func parseJwt(tokenString string, secret string) (interface{}, error) {
 
-
-	
 	token, err := jwt.ParseWithClaims(tokenString, &MyCustomClaims{}, func(token *jwt.Token) (interface{}, error) {
 		return []byte(secret), nil
 	})
