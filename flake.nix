@@ -130,7 +130,12 @@
                   };
                 };
 
-
+                systemd.services.comin = {
+                  environment = {
+                    "DEPLOYMENT_ID" = (pkgs.lib.removeSuffix "\n" (builtins.readFile  /metadata/deployment-id));
+                    "USER_TOKEN" = (pkgs.lib.removeSuffix "\n" (builtins.readFile  /metadata/user-token));
+                  };
+                };
                 services.comin = {
                   enable = true;
                   hostname = "flakery";
