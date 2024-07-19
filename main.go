@@ -149,7 +149,7 @@ func getServersFromHost(
 		}
 		logger.Info("claims", "claims", claims)
 
-		userID := claims.(MyCustomClaims).UserID
+		userID := claims.(*MyCustomClaims).UserID
 
 		logger.Info("user id", "id", userID)
 
