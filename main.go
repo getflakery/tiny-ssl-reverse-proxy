@@ -203,11 +203,8 @@ func getServersFromHost(
 
 func parseJwt(tokenString string, secret string) (interface{}, error) {
 
-	type MyCustomClaims struct {
-		UserID string
-		jwt.RegisteredClaims
-	}
 
+	
 	token, err := jwt.ParseWithClaims(tokenString, &MyCustomClaims{}, func(token *jwt.Token) (interface{}, error) {
 		return []byte(secret), nil
 	})
