@@ -18,6 +18,7 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/pkg/errors"
 	"github.com/samber/lo"
 	"github.com/sensiblecodeio/tiny-ssl-reverse-proxy/proxyprotocol"
 )
@@ -144,7 +145,7 @@ func getServersFromHost(
 
 		claims, err := parseJwt(userKey, secret)
 		if err != nil {
-			return nil, fmt.Errorf("error parsing jwt")
+			return nil, errors.WithStack(err)
 		}
 		logger.Info("claims", "claims", claims)
 
@@ -211,13 +212,13 @@ func parseJwt(tokenString string, secret string) (interface{}, error) {
 		return []byte(secret), nil
 	})
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "error parsing jwt")
 	}
 
 	if claims, ok := token.Claims.(*MyCustomClaims); ok && token.Valid {
 		return claims, nil
 	} else {
-		return nil, err
+		return nil, errors.WithStack(errors.New("invalid token"))
 	}
 
 }
