@@ -187,6 +187,7 @@
                 };
 
                 machine2 = { ... }: {
+                  networking.firewall.allowedTCPPorts = [  9002 ];
                   services.prometheus = {
                     enable = true;
                     port = 9090;
