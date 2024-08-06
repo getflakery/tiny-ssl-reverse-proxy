@@ -20,7 +20,7 @@ class MyServer(BaseHTTPRequestHandler):
                         "finer-snail-230f97.flakery.xyz": {"service": "230f97a2-8e84-4d9b-8246-11caf8e4507a"},
                     },
                     "services": {
-                        "230f97a2-8e84-4d9b-8246-11caf8e4507a": {"servers": [{"url": "http://10.0.2.112:8080"}, {"url": "http://10.0.2.12:8080"}]},
+                        "230f97a2-8e84-4d9b-8246-11caf8e4507a": {"servers": [{"url": "http://machine2:8080"}, {"url": "http://10.0.2.12:8080"}]},
                     },
                 },
             }

@@ -46,11 +46,13 @@ func getIsHealthy(
 		for deploymentID, services := range config.Http.Services {
 			for _, servers := range services.Servers {
 				fmt.Printf("Deployment: %s, url: %s\n", deploymentID, servers.URL)
-				// strip http:// from the url
-				servers.URL = strings.TrimPrefix(servers.URL, "http://")
-				// strip https:// from the url
-				servers.URL = strings.TrimPrefix(servers.URL, "https://")
-				host := strings.Split(servers.URL, ":")[0]
+
+				split :=  strings.Split(servers.URL, ":")
+				if len(split) < 2 {
+					return fmt.Errorf("url is invalid")
+				}
+				host := split[0] + ":" + split[1]
+
 				fmt.Printf("Deployment: %s, Host: %s\n", deploymentID, host)
 				resp, err := http.Get(host + ":9002/metrics")
 				if err != nil {
