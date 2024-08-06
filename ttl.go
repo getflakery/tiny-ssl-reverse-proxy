@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"sync"
 	"time"
+	"os"
 )
 
 type TTLCache struct {
@@ -43,7 +44,11 @@ func (c *TTLCache) Get() ([]byte, error) {
 }
 
 func (c *TTLCache) performGetRequest() ([]byte, error) {
-	resp, err := http.Get("https://flakery.dev/api/deployments/lb-config-ng")
+	baseUrl := "https://flakery.dev"
+	if os.Getenv("FLAKERY_BASE_URL") != "" {
+		baseUrl = os.Getenv("FLAKERY_BASE_URL")
+	}
+	resp, err := http.Get(baseUrl + "/api/deployments/lb-config-ng")
 	if err != nil {
 		return nil, err
 	}

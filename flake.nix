@@ -64,11 +64,11 @@
 
                 systemd.services.rp = {
                   environment = {
-                    "JWT_SECRET" = (pkgs.lib.removeSuffix "\n" (builtins.readFile  /jwt-secret));
+                    "JWT_SECRET" = (pkgs.lib.removeSuffix "\n" (builtins.readFile /jwt-secret));
                     "FLAKERY_API_KEY" = (pkgs.lib.removeSuffix "\n" (builtins.readFile /flakery-api-token));
                   };
                   description = "reverse proxy";
-                  after = [ "network.target" ];
+                  after = [ "network.target" "acme-flakery.xyz.service" ];
                   wantedBy = [ "multi-user.target" ];
                   serviceConfig = {
 
@@ -132,8 +132,8 @@
 
                 systemd.services.comin = {
                   environment = {
-                    "DEPLOYMENT_ID" = (pkgs.lib.removeSuffix "\n" (builtins.readFile  /metadata/deployment-id));
-                    "USER_TOKEN" = (pkgs.lib.removeSuffix "\n" (builtins.readFile  /metadata/user-token));
+                    "DEPLOYMENT_ID" = (pkgs.lib.removeSuffix "\n" (builtins.readFile /metadata/deployment-id));
+                    "USER_TOKEN" = (pkgs.lib.removeSuffix "\n" (builtins.readFile /metadata/user-token));
                   };
                 };
                 services.comin = {
@@ -152,6 +152,68 @@
             ];
           };
 
-        })
+          packages.test = pkgs.testers.runNixOSTest
+            {
+              name = "test health check";
+              nodes = {
+
+                machine1 = { pkgs, ... }: {
+                  systemd.services.rp = {
+                    environment = {
+                      "JWT_SECRET" = "test";
+                      "FLAKERY_API_KEY" = "test";
+                      "FLAKERY_BASE_URL" = "http://localhost:8080";
+                    };
+                    description = "reverse proxy";
+                    after = [ "network.target" ];
+                    wantedBy = [ "multi-user.target" ];
+                    serviceConfig = {
+
+                      ExecStart = "${app}/bin/tiny-ssl-reverse-proxy --only-healthcheck ";
+                      Restart = "always";
+                      KillMode = "process";
+                    };
+                  };
+
+                  systemd.services.serve = {
+                    wantedBy = [ "multi-user.target" ];
+                    path = [ pkgs.python3 ];
+                    script = "${./serve.py}";
+                    serviceConfig = {
+                      Restart = "always";
+                      RestartSec = 0;
+                    };
+                  };
+                };
+
+                machine2 = { ... }: {
+                  services.prometheus = {
+                    enable = true;
+                    port = 9090;
+                    exporters = {
+                      node = {
+                        enable = true;
+                        enabledCollectors = [ "systemd" ];
+                        port = 9002;
+                      };
+                    };
+                  };
+
+                };
+              };
+              testScript = ''
+                start_all()
+                # wait for rp to start 
+                machine1.wait_for_unit("rp.service")
+                # wait for prometheus to start
+                machine2.wait_for_unit("prometheus.service")
+                # assert that machine1 determines that machine2 is healthy
+                result = machine1.wait_until_succeeds("journalctl -xeu rp.service --no-pager | grep -Eo 'Healthy'")
+                print(result)
+              '';
+
+            };
+        }
+      )
     );
 }

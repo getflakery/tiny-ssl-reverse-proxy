@@ -228,9 +228,9 @@ func main() {
 	logger.Info("starting", "version", Version)
 
 	var (
-		listen, cert, key, where           string
-		useTLS, useLogging, behindTCPProxy bool
-		flushInterval                      time.Duration
+		listen, cert, key, where                            string
+		useTLS, useLogging, behindTCPProxy, onlyHealthcheck bool
+		flushInterval                                       time.Duration
 	)
 	flag.StringVar(&listen, "listen", ":443", "Bind address to listen on")
 	// certFile = "/var/lib/acme/flakery.xyz/cert.pem";
@@ -242,6 +242,7 @@ func main() {
 	flag.BoolVar(&useLogging, "logging", true, "log requests")
 	flag.BoolVar(&behindTCPProxy, "behind-tcp-proxy", false, "running behind TCP proxy (such as ELB or HAProxy)")
 	flag.DurationVar(&flushInterval, "flush-interval", 0, "minimum duration between flushes to the client (default: off)")
+	flag.BoolVar(&onlyHealthcheck, "only-healthcheck", false, "only run healthcheck")
 	oldUsage := flag.Usage
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "\n%v version %v\n\n", os.Args[0], Version)
@@ -252,6 +253,13 @@ func main() {
 	var handler http.Handler
 
 	ttlCache := NewTTLCache(5 * time.Second)
+	if onlyHealthcheck {
+		healthCheck(ttlCache, placeholder)
+		return
+	} else {
+		// todo dangling go routine
+		go healthCheck(ttlCache, placeholder)
+	}
 	handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/_version" {
 			w.Header().Add("X-Tiny-SSL-Version", Version)

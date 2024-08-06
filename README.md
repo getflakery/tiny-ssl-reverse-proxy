@@ -28,3 +28,10 @@ Usage of tiny-ssl-reverse-proxy:
   -where string
     	Place to forward connections to (default "http://localhost:80")
 ```
+
+
+## run integration tests
+```bash
+nix build -L .#test --eval-store auto --store ssh-ng://root@woodpecker-5 --option system x86_64-linux --show-trace  
+```        
+
