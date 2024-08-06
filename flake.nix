@@ -211,6 +211,11 @@
                 # assert that machine1 determines that machine2 is healthy
                 result = machine1.wait_until_succeeds("journalctl -xeu rp.service --no-pager | grep -Eo 'Healthy'")
                 print(result)
+                machine2.crash()
+                # assert that machine1 determines that machine2 is unhealthy
+                result = machine1.wait_until_succeeds("journalctl -xeu rp.service --no-pager | grep -Eo 'UnHealthy'")
+                print(result)
+
               '';
 
             };
