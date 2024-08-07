@@ -217,7 +217,7 @@
                 result = machine1.wait_until_succeeds("journalctl -xeu rp.service --no-pager | grep -Eo 'UnHealthy'")
                 print(result)
                 # Received POST request at {self.path} with body: {post_data.decode('utf-8')} in machine1
-                result = machine1.wait_until_succeeds("journalctl -xeu rp.service --no-pager | grep -Eo 'Received POST request at /api/v0/deployments/target/unhealthy/230f97a2-8e84-4d9b-8246-11caf8e4507a with body: {\"Host\":\"http://machine2:8080\"}'")
+                result = machine1.wait_until_succeeds("journalctl -xeu serve-start.service --no-pager | grep -Eo 'Received POST request at /api/v0/deployments/target/unhealthy/230f97a2-8e84-4d9b-8246-11caf8e4507a with body: {\"Host\":\"http://machine2:8080\"}'")
                 print(result)
               '';
 
