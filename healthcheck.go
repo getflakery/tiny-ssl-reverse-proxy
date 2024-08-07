@@ -19,6 +19,12 @@ type healthCheckError struct {
 	Host         string
 }
 
+// handle method for health check error
+func (e healthCheckError) Handle() error {
+	fmt.Printf("Deployment: %s, Host: %s UnHealthy\n", e.DeploymentID, e.Host)
+	return markHostUnhealthy(e.DeploymentID, e.Host)
+}
+
 func (e healthCheckError) Error() string {
 	return fmt.Sprintf("health check error: %v", e.Err)
 }
@@ -38,7 +44,6 @@ func doEvery(
 
 func getIsHealthy(
 	ttlCache *TTLCache,
-	placeholder func(string, string) error,
 ) func(t time.Time) error {
 	return func(t time.Time) error {
 		r, err := ttlCache.Get()
@@ -73,11 +78,10 @@ func getIsHealthy(
 					}
 				}
 				if resp.StatusCode != http.StatusOK {
-					fmt.Printf("Deployment: %s, Host: %s UnHealthy\n", deploymentID, host)
-
-					err := placeholder(deploymentID, host)
-					if err != nil {
-						return errors.Wrap(err, "error calling placeholder")
+					return healthCheckError{
+						Err:          err,
+						DeploymentID: deploymentID,
+						Host:         host,
 					}
 				} else {
 					fmt.Printf("Deployment: %s, Host: %s Healthy\n", deploymentID, host)
@@ -88,17 +92,15 @@ func getIsHealthy(
 	}
 }
 
-func healthCheck(ttlCache *TTLCache, placeholder func(string, string) error) error {
+func healthCheck(ttlCache *TTLCache) error {
 	return doEvery(
 		5*time.Second,
-		getIsHealthy(ttlCache, placeholder),
+		getIsHealthy(ttlCache),
 		func(err error) {
 			switch e := err.(type) {
 			case healthCheckError:
-				fmt.Printf("Deployment: %s, Host: %s UnHealthy\n", e.DeploymentID, e.Host)
-				err2 := placeholder(e.DeploymentID, e.Host)
+				err2 := e.Handle()
 				if err2 != nil {
-					log.Println(err)
 					log.Println(err2)
 				}
 			default:
@@ -112,7 +114,7 @@ type UnhealthyHost struct {
 	Host string
 }
 
-func placeholder(deployment string, targetHost string) error {
+func markHostUnhealthy(deployment string, targetHost string) error {
 
 	// Create the HTTP client
 	client := http.Client{}
@@ -123,14 +125,15 @@ func placeholder(deployment string, targetHost string) error {
 		return errors.Wrap(err, "error marshalling json")
 	}
 
-	apihost := os.Getenv("FLAKERY_API_HOST")
+	apihost := os.Getenv("FLAKERY_BASE_URL")
 	if apihost == "" {
-		return fmt.Errorf("FLAKERY_API_HOST not set")
+		return fmt.Errorf("FLAKERY_BASE_URL not set")
 	}
 
 	// Construct the request
 	req, err := http.NewRequest("POST", fmt.Sprintf(
-		apihost, deployment, targetHost,
+		"%s/api/v0/deployments/target/unhealthy/%s",
+		apihost, deployment,
 	), bytes.NewBuffer(body))
 	if err != nil {
 		return errors.Wrap(err, "error creating request")
@@ -147,9 +150,4 @@ func placeholder(deployment string, targetHost string) error {
 
 	_, err = client.Do(req)
 	return errors.Wrap(err, "error making request")
-}
-
-func printholder(deployment string, targetHost string) error {
-	fmt.Printf("Deployment: %s, Host: %s\n", deployment, targetHost)
-	return nil
 }

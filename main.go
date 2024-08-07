@@ -254,11 +254,11 @@ func main() {
 
 	ttlCache := NewTTLCache(5 * time.Second)
 	if onlyHealthcheck {
-		healthCheck(ttlCache, placeholder)
+		healthCheck(ttlCache)
 		return
 	} else {
 		// todo dangling go routine
-		go healthCheck(ttlCache, placeholder)
+		go healthCheck(ttlCache)
 	}
 	handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/_version" {

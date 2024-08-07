@@ -210,12 +210,15 @@
                 machine2.wait_for_unit("prometheus.service")
                 # assert that machine1 determines that machine2 is healthy
                 result = machine1.wait_until_succeeds("journalctl -xeu rp.service --no-pager | grep -Eo 'Healthy'")
+                result = machine1.wait_until_succeeds("journalctl -xeu rp.service --no-pager | grep -Eo 'Healthy'")
                 print(result)
                 machine2.crash()
                 # assert that machine1 determines that machine2 is unhealthy
                 result = machine1.wait_until_succeeds("journalctl -xeu rp.service --no-pager | grep -Eo 'UnHealthy'")
                 print(result)
-
+                # Received POST request at {self.path} with body: {post_data.decode('utf-8')} in machine1
+                result = machine1.wait_until_succeeds("journalctl -xeu rp.service --no-pager | grep -Eo 'Received POST request at /api/v0/deployments/target/unhealthy/230f97a2-8e84-4d9b-8246-11caf8e4507a with body: {\"Host\": \"http://machine2:8080\"'")
+                print(result)
               '';
 
             };
