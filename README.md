@@ -32,6 +32,6 @@ Usage of tiny-ssl-reverse-proxy:
 
 ## run integration tests
 ```bash
-nix build -L .#test --eval-store auto --store ssh-ng://root@woodpecker-5 --option system x86_64-linux --show-trace  
+nix build -L .#test --eval-store auto --store ssh-ng://root@woodpecker-1 --option system x86_64-linux --show-trace  
 ```        
 

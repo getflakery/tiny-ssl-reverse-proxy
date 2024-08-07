@@ -13,6 +13,16 @@ import (
 	"github.com/pkg/errors"
 )
 
+type healthCheckError struct {
+	Err          error
+	DeploymentID string
+	Host         string
+}
+
+func (e healthCheckError) Error() string {
+	return fmt.Sprintf("health check error: %v", e.Err)
+}
+
 func doEvery(
 	d time.Duration,
 	f func(time.Time) error,
@@ -47,7 +57,7 @@ func getIsHealthy(
 			for _, servers := range services.Servers {
 				fmt.Printf("Deployment: %s, url: %s\n", deploymentID, servers.URL)
 
-				split :=  strings.Split(servers.URL, ":")
+				split := strings.Split(servers.URL, ":")
 				if len(split) < 2 {
 					return fmt.Errorf("url is invalid")
 				}
@@ -56,7 +66,11 @@ func getIsHealthy(
 				fmt.Printf("Deployment: %s, Host: %s\n", deploymentID, host)
 				resp, err := http.Get(host + ":9002/metrics")
 				if err != nil {
-					return errors.Wrap(err, "error getting metrics")
+					return healthCheckError{
+						Err:          err,
+						DeploymentID: deploymentID,
+						Host:         host,
+					}
 				}
 				if resp.StatusCode != http.StatusOK {
 					fmt.Printf("Deployment: %s, Host: %s UnHealthy\n", deploymentID, host)
@@ -79,7 +93,17 @@ func healthCheck(ttlCache *TTLCache, placeholder func(string, string) error) err
 		5*time.Second,
 		getIsHealthy(ttlCache, placeholder),
 		func(err error) {
-			log.Printf("health check failed: %v", err)
+			switch e := err.(type) {
+			case healthCheckError:
+				fmt.Printf("Deployment: %s, Host: %s UnHealthy\n", e.DeploymentID, e.Host)
+				err2 := placeholder(e.DeploymentID, e.Host)
+				if err2 != nil {
+					log.Println(err)
+					log.Println(err2)
+				}
+			default:
+				log.Println(err)
+			}
 		})
 
 }
