@@ -55,7 +55,7 @@
                   };
                 };
 
-                networking.firewall.allowedTCPPorts = [ 80 443 9002 ];
+                networking.firewall.allowedTCPPorts = [ 80 443 9002 3000 ];
 
                 services.tailscale = {
                   enable = true;
