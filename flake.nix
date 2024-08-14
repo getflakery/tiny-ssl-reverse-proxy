@@ -183,7 +183,7 @@
                     autoStart = true;
                     volumes = [ "/var/run/docker.sock:/var/run/docker.sock" ];
                     # -i 2
-                    cmd = [ "--interval 2" ];
+                    cmd = [ "-i 2" ];
                   };
                 };
 
