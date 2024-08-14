@@ -177,6 +177,8 @@
                     autoStart = true;
                     ports = [ "3000:3000" ];
                     environmentFiles = [ "/.env" ];
+                    extraOptions = "--cap-add=CAP_NET_RAW";
+
                   };
                   watchtower = {
                     image = "containrrr/watchtower";
