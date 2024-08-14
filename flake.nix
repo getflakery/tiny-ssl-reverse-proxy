@@ -131,25 +131,25 @@
                   };
                 };
 
-                systemd.services.comin = {
-                  environment = {
-                    "DEPLOYMENT_ID" = (pkgs.lib.removeSuffix "\n" (builtins.readFile /metadata/deployment-id));
-                    "USER_TOKEN" = (pkgs.lib.removeSuffix "\n" (builtins.readFile /metadata/user-token));
-                  };
-                };
-                services.comin = {
-                  enable = true;
-                  hostname = "flakery";
-                  remotes = [
-                    {
-                      name = "origin";
-                      url = "https://github.com/getflakery/tiny-ssl-reverse-proxy";
-                      poller.period = 2;
-                      branches.main.name = "master";
-                    }
-                  ];
+                # systemd.services.comin = {
+                #   environment = {
+                #     "DEPLOYMENT_ID" = (pkgs.lib.removeSuffix "\n" (builtins.readFile /metadata/deployment-id));
+                #     "USER_TOKEN" = (pkgs.lib.removeSuffix "\n" (builtins.readFile /metadata/user-token));
+                #   };
+                # };
+                # services.comin = {
+                #   enable = true;
+                #   hostname = "flakery";
+                #   remotes = [
+                #     {
+                #       name = "origin";
+                #       url = "https://github.com/getflakery/tiny-ssl-reverse-proxy";
+                #       poller.period = 2;
+                #       branches.main.name = "master";
+                #     }
+                #   ];
 
-                };
+                # };
                 # todo make me a module
                 # Enable common container config files in /etc/containers
                 virtualisation.containers.enable = true;
