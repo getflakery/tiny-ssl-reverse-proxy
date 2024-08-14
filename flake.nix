@@ -166,7 +166,7 @@
                     defaultNetwork.settings.dns_enabled = true;
                   };
                 };
-
+                networking.firewall.interfaces.podman0.allowedUDPPorts = [ 53 ];
 
                 # make nocodb depend on create-dir
                 virtualisation.oci-containers.backend = "podman";
