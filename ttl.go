@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"sync"
 	"time"
-	"os"
 )
 
 type TTLCache struct {
@@ -44,7 +44,7 @@ func (c *TTLCache) Get() ([]byte, error) {
 }
 
 func (c *TTLCache) performGetRequest() ([]byte, error) {
-	baseUrl := "https://flakery.dev"
+	baseUrl := "http://localhost:3000"
 	if os.Getenv("FLAKERY_BASE_URL") != "" {
 		baseUrl = os.Getenv("FLAKERY_BASE_URL")
 	}
@@ -62,4 +62,3 @@ func (c *TTLCache) performGetRequest() ([]byte, error) {
 	return io.ReadAll(resp.Body)
 
 }
-
