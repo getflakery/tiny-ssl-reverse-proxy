@@ -113,7 +113,7 @@ func healthCheck(ttlCache *TTLCache) error {
 type UnhealthyHost struct {
 	Host string
 }
-
+ 
 func markHostUnhealthy(deployment string, targetHost string) error {
 
 	// Create the HTTP client

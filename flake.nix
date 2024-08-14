@@ -8,10 +8,12 @@
   inputs.gomod2nix.inputs.flake-utils.follows = "flake-utils";
   inputs.flakery.url = "github:getflakery/flakes";
   inputs.comin.url = "github:r33drichards/comin/ac3b4d89a571c33ed201fc656287076d0eadb47f";
+    inputs.dash.url = "github:getflakery/dash";
 
 
 
-  outputs = inputs@{ self, nixpkgs, flake-utils, gomod2nix, flakery, comin, ... }:
+
+  outputs = inputs@{ self, nixpkgs, flake-utils, gomod2nix, flakery, comin, dash, ... }:
     (flake-utils.lib.eachDefaultSystem
       (system:
         let
@@ -40,6 +42,7 @@
             modules = [
               inputs.comin.nixosModules.comin
               flakery.nixosModules.flakery
+              dash.nixosConfigurations.flakery-config-only
               {
                 security.acme = {
                   acceptTerms = true;
@@ -54,7 +57,7 @@
                   };
                 };
 
-                networking.firewall.allowedTCPPorts = [ 80 443 9002 ];
+                networking.firewall.allowedTCPPorts = [ 80 443 9002 ]; 
 
                 services.tailscale = {
                   enable = true;
