@@ -8,12 +8,11 @@
   inputs.gomod2nix.inputs.flake-utils.follows = "flake-utils";
   inputs.flakery.url = "github:getflakery/flakes";
   inputs.comin.url = "github:r33drichards/comin/ac3b4d89a571c33ed201fc656287076d0eadb47f";
-  inputs.dash.url = "github:getflakery/dash";
 
 
 
 
-  outputs = inputs@{ self, nixpkgs, flake-utils, gomod2nix, flakery, comin, dash, ... }:
+  outputs = inputs@{ self, nixpkgs, flake-utils, gomod2nix, flakery, comin, ... }:
     (flake-utils.lib.eachDefaultSystem
       (system:
         let
@@ -42,7 +41,6 @@
             modules = [
               inputs.comin.nixosModules.comin
               flakery.nixosModules.flakery
-              dash.nixosConfigurations.flakery-config-only
               {
                 security.acme = {
                   acceptTerms = true;
@@ -57,7 +55,7 @@
                   };
                 };
 
-                networking.firewall.allowedTCPPorts = [ 80 443 9002 ]; 
+                networking.firewall.allowedTCPPorts = [ 80 443 9002 ];
 
                 services.tailscale = {
                   enable = true;
@@ -150,7 +148,43 @@
                       branches.main.name = "master";
                     }
                   ];
+
                 };
+                # todo make me a module
+                # Enable common container config files in /etc/containers
+                virtualisation.containers.enable = true;
+                virtualisation = {
+                  podman = {
+                    enable = true;
+
+                    # Create a `docker` alias for podman, to use it as a drop-in replacement
+                    dockerCompat = true;
+                    # docker socket
+                    dockerSocket.enable = true;
+
+                    # Required for containers under podman-compose to be able to talk to each other.
+                    defaultNetwork.settings.dns_enabled = true;
+                  };
+                };
+
+
+                # make nocodb depend on create-dir
+                virtualisation.oci-containers.backend = "podman";
+
+                virtualisation.oci-containers.containers = {
+                  flakery = {
+                    image = "public.ecr.aws/t7q1f7c9/flakery:latest";
+                    autoStart = true;
+                    ports = [ "3000:3000" ];
+                    environmentFiles = [ "/.env" ];
+                  };
+                  watchtower = {
+                    image = "containrrr/watchtower";
+                    autoStart = true;
+                    volumes = [ "/var/run/docker.sock:/var/run/docker.sock" ];
+                  };
+                };
+
               }
             ];
           };
@@ -190,7 +224,7 @@
                 };
 
                 machine2 = { ... }: {
-                  networking.firewall.allowedTCPPorts = [  9002 ];
+                  networking.firewall.allowedTCPPorts = [ 9002 ];
                   services.prometheus = {
                     enable = true;
                     port = 9090;
