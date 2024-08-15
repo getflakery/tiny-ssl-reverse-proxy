@@ -74,14 +74,14 @@ func getIsHealthy(
 					return healthCheckError{
 						Err:          err,
 						DeploymentID: deploymentID,
-						Host:         split[1],
+						Host:         strings.TrimPrefix(split[1], "//"),
 					}
 				}
 				if resp.StatusCode != http.StatusOK {
 					return healthCheckError{
 						Err:          err,
 						DeploymentID: deploymentID,
-						Host:         split[1],
+						Host:         strings.TrimPrefix(split[1], "//"),
 					}
 				} else {
 					fmt.Printf("Deployment: %s, Host: %s Healthy\n", deploymentID, host)
