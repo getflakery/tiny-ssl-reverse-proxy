@@ -7,9 +7,3 @@ schema = 3
   [mod."github.com/pkg/errors"]
     version = "v0.9.1"
     hash = "sha256-mNfQtcrQmu3sNg/7IwiieKWOgFQOVVe2yXgKBpe/wZw="
-  [mod."github.com/samber/lo"]
-    version = "v1.44.0"
-    hash = "sha256-FGONIXxPuavWsDUmm/ZB9kxs2FWAeUr5WyTHQRiSYdM="
-  [mod."golang.org/x/text"]
-    version = "v0.16.0"
-    hash = "sha256-hMTO45upjEuA4sJzGplJT+La2n3oAfHccfYWZuHcH+8="
