@@ -113,7 +113,7 @@ func healthCheck(ttlCache *TTLCache) error {
 type UnhealthyHost struct {
 	Host string
 }
- 
+
 func markHostUnhealthy(deployment string, targetHost string) error {
 
 	// Create the HTTP client
@@ -127,12 +127,13 @@ func markHostUnhealthy(deployment string, targetHost string) error {
 
 	apihost := os.Getenv("FLAKERY_BASE_URL")
 	if apihost == "" {
-		return fmt.Errorf("FLAKERY_BASE_URL not set")
+		fmt.Println("FLAKERY_BASE_URL not set, using default")
+		apihost = "http://localhost:3000"
 	}
 
 	// Construct the request
 	req, err := http.NewRequest("POST", fmt.Sprintf(
-		"%s/api/v0/deployments/target/unhealthy/%s",
+		"%s/api/deployments/target/unhealthy/%s",
 		apihost, deployment,
 	), bytes.NewBuffer(body))
 	if err != nil {

@@ -177,7 +177,7 @@
                     autoStart = true;
                     ports = [ "3000:3000" ];
                     environmentFiles = [ "/.env" ];
-                    extraOptions = ["--cap-add=CAP_NET_RAW"];
+                    extraOptions = ["--cap-add=CAP_NET_RAW"]; # maybe not needed
 
                   };
                   watchtower = {

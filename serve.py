@@ -36,7 +36,7 @@ class MyServer(BaseHTTPRequestHandler):
 
     def do_POST(self):
         # Only handle specific path
-        if self.path == "/api/v0/deployments/target/unhealthy/230f97a2-8e84-4d9b-8246-11caf8e4507a":
+        if self.path == "/api/deployments/target/unhealthy/230f97a2-8e84-4d9b-8246-11caf8e4507a":
             content_length = int(self.headers['Content-Length'])
             post_data = self.rfile.read(content_length)
             logging.info(f"Received POST request at {self.path} with body: {post_data.decode('utf-8')}")
