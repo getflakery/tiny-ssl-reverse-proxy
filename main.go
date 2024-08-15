@@ -107,10 +107,11 @@ func (c *ConnectionErrorHandler) RoundTrip(req *http.Request) (*http.Response, e
 }
 
 func healthyServers(s []Servers, unhealthyHosts map[Servers]bool) []Servers {
-	return lo.Filter(s, func(s Servers, _ int) bool {
-		_, ok := unhealthyHosts[s]
-		return !ok
-	})
+	return s // noop
+	// return lo.Filter(s, func(s Servers, _ int) bool {
+	// 	_, ok := unhealthyHosts[s]
+	// 	return !ok
+	// })
 }
 
 type MyCustomClaims struct {
