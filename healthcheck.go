@@ -19,10 +19,23 @@ type healthCheckError struct {
 	Host         string
 }
 
+var counter map[string]int = map[string]int{}
+
 // handle method for health check error
 func (e healthCheckError) Handle() error {
 	fmt.Printf("Deployment: %s, Host: %s UnHealthy\n", e.DeploymentID, e.Host)
-	return markHostUnhealthy(e.DeploymentID, e.Host)
+	key := e.DeploymentID + e.Host
+	if _, ok := counter[key]; ok {
+		counter[key]++
+	} else {
+		counter[key] = 1
+	}
+
+	if counter[key] > 8 {
+		fmt.Printf("Deployment: %s, Host: %s Marked UnHealthy\n", e.DeploymentID, e.Host)
+		return markHostUnhealthy(e.DeploymentID, e.Host)
+	}
+	return nil
 }
 
 func (e healthCheckError) Error() string {
