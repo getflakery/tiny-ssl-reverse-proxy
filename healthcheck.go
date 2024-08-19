@@ -32,6 +32,7 @@ func (e healthCheckError) Handle() error {
 	}
 
 	if counter[key] > 4 {
+		counter[key] = 0
 		fmt.Printf("Deployment: %s, Host: %s Marked UnHealthy\n", e.DeploymentID, e.Host)
 		return markHostUnhealthy(e.DeploymentID, e.Host)
 	}

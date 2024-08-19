@@ -178,7 +178,7 @@
                     autoStart = true;
                     ports = [ "3000:3000" ];
                     environmentFiles = [ "/.env" ];
-                    extraOptions = ["--cap-add=CAP_NET_RAW"]; # maybe not needed
+                    # extraOptions = [ "--cap-add=CAP_NET_RAW" ]; # maybe not needed
 
                   };
                   watchtower = {
@@ -187,6 +187,11 @@
                     volumes = [ "/var/run/docker.sock:/var/run/docker.sock" ];
                     # -i 2
                     cmd = [ "-i" "2" ];
+                  };
+                };
+                systemd.services.podman-flakery = {
+                  serviceConfig = {
+                    Restart = "always";
                   };
                 };
 
