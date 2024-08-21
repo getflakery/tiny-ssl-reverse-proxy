@@ -173,15 +173,22 @@
                   script = ''
                     ELASTIC_IP="44.235.22.226"
                     INSTANCE_ID=$(curl -s http://169.254.169.254/latest/meta-data/instance-id)
+                    echo "Instance ID: $INSTANCE_ID"
                     ALLOCATION_ID=$(aws ec2 describe-addresses --public-ips $ELASTIC_IP --query 'Addresses[0].AllocationId' --output text)
+                    echo "Allocation ID: $ALLOCATION_ID"
                     ASSOCIATION_ID=$(aws ec2 describe-addresses --public-ips $ELASTIC_IP --query 'Addresses[0].AssociationId' --output text)
+                    echo "Association ID: $ASSOCIATION_ID"
 
                     if [ "$ASSOCIATION_ID" != "None" ]; then
                       echo "Elastic IP is already associated with another instance. Disassociating..."
                       aws ec2 disassociate-address --association-id "$ASSOCIATION_ID"
                     fi
 
+                    echo "Associating Elastic IP with instance..."
+
                     aws ec2 associate-address --instance-id "$INSTANCE_ID" --allocation-id "$ALLOCATION_ID"
+
+                    echo "Elastic IP associated with instance."
                   '';
                   serviceConfig = {
                     Type = "oneshot";
