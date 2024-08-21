@@ -273,7 +273,7 @@ func main() {
 		}
 
 		// if host is www.flakery.xyz, serve localhost:3000
-		if r.Host == "www.flakery.xyz" {
+		if r.Host == "www.flakery.dev" {
 			// reverse proxy to localhost:3000
 			logger.Info("proxying to localhost:3000")
 			proxy := httputil.NewSingleHostReverseProxy(&url.URL{
