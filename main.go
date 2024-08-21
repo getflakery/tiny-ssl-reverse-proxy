@@ -338,7 +338,6 @@ func main() {
 		h.ServeHTTP(w, r)
 	})
 
-
 	keyCerts := [][]string{
 		{"/var/lib/acme/flakery.xyz/key.pem", "/var/lib/acme/flakery.xyz/cert.pem"},
 		{"/var/lib/acme/flakery.dev/key.pem", "/var/lib/acme/flakery.dev/cert.pem"},
@@ -354,7 +353,7 @@ func main() {
 	}
 
 	server := http.Server{
-		Addr:      "127.0.0.1:443",
+		Addr:      listen,
 		Handler:   handler,
 		TLSConfig: cfg,
 	}
