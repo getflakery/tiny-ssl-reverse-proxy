@@ -271,6 +271,7 @@ func main() {
 			logger.Info("🌨️")
 			return
 		}
+		r.Header.Set("X-Forwarded-Proto", "https")
 
 		// if host is www.flakery.xyz, serve localhost:3000
 		if r.Host == "www.flakery.dev" {
@@ -284,7 +285,6 @@ func main() {
 			return
 		}
 
-		r.Header.Set("X-Forwarded-Proto", "https")
 		// print request url
 		c, err := ttlCache.Get()
 		if err != nil {
