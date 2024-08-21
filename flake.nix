@@ -165,11 +165,11 @@
                   description = "Assign Elastic IP to instance";
                   wantedBy = [ "multi-user.target" ];
                   path = with pkgs; [ awscli2 curl ];
-                  # environment = {
-                  #   AWS_ACCESS_KEY_ID = (pkgs.lib.removeSuffix "\n" (builtins.readFile /AWS_ACCESS_KEY_ID));
-                  #   AWS_SECRET_ACCESS_KEY = (pkgs.lib.removeSuffix "\n" (builtins.readFile /AWS_SECRET_ACCESS_KEY));
-                  #   AWS_REGION = "us-west-2";
-                  # };
+                  environment = {
+                    AWS_ACCESS_KEY_ID = (pkgs.lib.removeSuffix "\n" (builtins.readFile /AWS_ACCESS_KEY_ID));
+                    AWS_SECRET_ACCESS_KEY = (pkgs.lib.removeSuffix "\n" (builtins.readFile /AWS_SECRET_ACCESS_KEY));
+                    AWS_REGION = "us-west-2";
+                  };
                   script = ''
                     ELASTIC_IP="44.235.22.226"
                     INSTANCE_ID=$(curl -s http://169.254.169.254/latest/meta-data/instance-id)
