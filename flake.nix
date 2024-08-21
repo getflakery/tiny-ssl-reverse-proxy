@@ -162,7 +162,6 @@
                 };
 
                 systemd.services.assign-eip = {
-                  enable = false;
                   description = "Assign Elastic IP to instance";
                   wantedBy = [ "multi-user.target" ];
                   path = with pkgs; [ awscli2 curl ];
