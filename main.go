@@ -271,12 +271,6 @@ func main() {
 			return
 		}
 
-		if r.Host == "flakery.dev" {
-			// redirect to www.flakery.dev
-			http.Redirect(w, r, "https://www.flakery.dev", http.StatusMovedPermanently)
-			return
-		}
-
 		r.Header.Set("X-Forwarded-Proto", "https")
 		// print request url
 		c, err := ttlCache.Get()
