@@ -150,6 +150,7 @@
                     autoStart = true;
                     ports = [ "3000:3000" ];
                     environmentFiles = [ "/.env" ];
+                    extraOptions = [ "--pull=newer" ];
                     # extraOptions = [ "--cap-add=CAP_NET_RAW" ]; # maybe not needed
 
                   };
@@ -159,6 +160,8 @@
                     volumes = [ "/var/run/docker.sock:/var/run/docker.sock" ];
                     # -i 2
                     cmd = [ "-i" "2" ];
+                    extraOptions = [ "--pull=newer" ];
+
                   };
                 };
                 systemd.services.podman-flakery = {
