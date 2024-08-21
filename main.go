@@ -3,11 +3,13 @@ package main
 import (
 	"bytes"
 	"crypto/rand"
+	"crypto/tls"
 	"encoding/json"
 	"flag"
 	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
 	"log/slog"
 	"math/big"
 	"net"
@@ -19,7 +21,6 @@ import (
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/pkg/errors"
-	"github.com/sensiblecodeio/tiny-ssl-reverse-proxy/proxyprotocol"
 )
 
 type Routers struct {
@@ -337,20 +338,28 @@ func main() {
 		h.ServeHTTP(w, r)
 	})
 
-	server := &http.Server{Addr: listen, Handler: handler}
 
-	var err error
+	keyCerts := [][]string{
+		{"/var/lib/acme/flakery.xyz/key.pem", "/var/lib/acme/flakery.xyz/cert.pem"},
+		{"/var/lib/acme/flakery.dev/key.pem", "/var/lib/acme/flakery.dev/cert.pem"},
+	}
+	cfg := &tls.Config{}
 
-	switch {
-	case useTLS && behindTCPProxy:
-		err = proxyprotocol.BehindTCPProxyListenAndServeTLS(server, cert, key)
-	case behindTCPProxy:
-		err = proxyprotocol.BehindTCPProxyListenAndServe(server)
-	case useTLS:
-		err = server.ListenAndServeTLS(cert, key)
-	default:
-		err = server.ListenAndServe()
+	for _, keyCert := range keyCerts {
+		cert, err := tls.LoadX509KeyPair(keyCert[1], keyCert[0])
+		if err != nil {
+			log.Fatal(err)
+		}
+		cfg.Certificates = append(cfg.Certificates, cert)
 	}
 
-	logger.Error("server error", "err", err)
+	server := http.Server{
+		Addr:      "127.0.0.1:443",
+		Handler:   handler,
+		TLSConfig: cfg,
+	}
+
+	if err := server.ListenAndServeTLS("", ""); err != nil {
+		log.Fatal(err)
+	}
 }

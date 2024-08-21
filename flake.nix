@@ -52,6 +52,12 @@
                       dnsProvider = "route53"; # Update this to your DNS provider if different
                       environmentFile = "/var/lib/acme/route53-credentials";
                     };
+                    "flakery.dev" = {
+                      domain = "*.flakery.dev";
+                      # Use DNS challenge for wildcard certificates
+                      dnsProvider = "route53"; # Update this to your DNS provider if different
+                      environmentFile = "/var/lib/acme/route53-credentials";
+                    };
                   };
                 };
 
