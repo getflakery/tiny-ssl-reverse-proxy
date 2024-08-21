@@ -162,6 +162,7 @@
                 };
 
                 systemd.services.assign-eip = {
+                  enable = false;
                   description = "Assign Elastic IP to instance";
                   wantedBy = [ "multi-user.target" ];
                   path = with pkgs; [ awscli2 curl ];
@@ -188,7 +189,7 @@
 
                     aws ec2 associate-address --instance-id "$INSTANCE_ID" --allocation-id "$ALLOCATION_ID"
 
-                    echo "Elastic IP associated with instance."
+                    
                   '';
                   serviceConfig = {
                     Type = "oneshot";
