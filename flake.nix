@@ -1,7 +1,7 @@
 {
   description = "A basic gomod2nix flake";
 
-  inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+  inputs.nixpkgs.url = "github:NixOS/nixpkgs/24.05";
   inputs.flake-utils.url = "github:numtide/flake-utils";
   inputs.gomod2nix.url = "github:nix-community/gomod2nix";
   inputs.gomod2nix.inputs.nixpkgs.follows = "nixpkgs";
@@ -118,41 +118,7 @@
                     ];
                   };
                 };
-                # don't need anymore
-                # services.prometheus = {
-                #   enable = true;
-                #   port = 9090;
-                #   exporters = {
-                #     node = {
-                #       enable = true;
-                #       enabledCollectors = [ "systemd" ];
-                #       port = 9002;
-                #     };
 
-                #   };
-                # };
-
-                # systemd.services.comin = {
-                #   environment = {
-                #     "DEPLOYMENT_ID" = (pkgs.lib.removeSuffix "\n" (builtins.readFile /metadata/deployment-id));
-                #     "USER_TOKEN" = (pkgs.lib.removeSuffix "\n" (builtins.readFile /metadata/user-token));
-                #   };
-                # };
-                # services.comin = {
-                #   enable = true;
-                #   hostname = "flakery";
-                #   remotes = [
-                #     {
-                #       name = "origin";
-                #       url = "https://github.com/getflakery/tiny-ssl-reverse-proxy";
-                #       poller.period = 2;
-                #       branches.main.name = "master";
-                #     }
-                #   ];
-
-                # };
-                # todo make me a module
-                # Enable common container config files in /etc/containers
                 virtualisation.containers.enable = true;
                 virtualisation = {
                   podman = {
